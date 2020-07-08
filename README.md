@@ -13,6 +13,9 @@ This is an IRC bot for running the game Codenames.
     - Green and Pink can be abbreviated as `g` and `p`.
 - Use `-stats` to see who is joined.
 - Use `-start` to start the game.
+- Use `-pingif n` to set a pingif, where `n` is an integer. Bot will ping you
+  if `n` players join.
+    - `-pingif 0` disables your pingif.
 
 ## In-game commands
 

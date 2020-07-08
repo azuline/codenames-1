@@ -1,7 +1,7 @@
 from pyrcb2 import Event, IRCBot
 
 from .interface import Interface
-from .state import UNLIMITED, Game, GameMode, GamePhase, InvalidGameState, Player, Team
+from .state import UNLIMITED, Game, GameMode, GamePhase, InvalidGameState, Pingifs, Player, Team
 from .utils import plural
 
 import random
@@ -58,6 +58,8 @@ class IRCInterface(Interface):
         self.nick = nick
         self.channel = channel
         self.game = Game(interface=self)
+
+        self.pingifs = Pingifs()
 
     def load_commands(self):
         for thing in dir(self):
@@ -127,6 +129,8 @@ class IRCInterface(Interface):
             team_pref = None
 
         self.game.join(actor, team_pref)
+
+        self.ping_players()
 
     @command({"l", "leave"})
     def command_leave(self, actor, args):
@@ -256,6 +260,30 @@ class IRCInterface(Interface):
         result = "head" if v < 0.3 else "tail" if v < 0.9 else "side"
 
         self.tell(f"The pony lands on its {B}{result}{N}.")
+
+    @command({"pingif"})
+    def command_pingif(self, actor, args):
+        if len(args) != 2 or not args[1].isdigit():
+            raise InvalidGameState("Invalid syntax. -pingif takes one argument, a number.")
+
+        ping_count = int(args[1])
+
+        if ping_count < 0:
+            raise InvalidGameState("Ping count must be a non-negative integer.")
+        elif ping_count == 0:
+            try:
+                del self.pingifs[actor]
+            except KeyError:
+                self.tell_private(actor, "No ping preferences to remove.")
+        else:
+            self.pingifs[actor] = ping_count
+            self.tell_private(actor, f"Your ping preferences have been set to {ping_count}.")
+
+    def ping_players(self):
+        player_count = len(self.game.players)
+        player_to_ping = self.pingifs.get_players_with_ping_count(player_count)
+
+        self.tell(f"PING! {player_count} players! {', '.join(players_to_ping)}")
 
     def notify_winner(self):
         super().notify_winner()

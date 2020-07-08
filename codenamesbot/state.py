@@ -465,3 +465,67 @@ class Game:
                 return True
 
         return False
+
+
+class Pingifs:
+
+    # just remove all this file shit later.
+    from os.path import join, dirname, parent
+    save_file = join(dirname(dirname(__file__)), 'pingifs.txt')
+
+    def __init__(self):
+        self.__player_map = {}
+        self.__ping_count_map = collections.defaultdict(list)
+
+        self.__load_persistent_state()
+
+    def get_players_with_ping_count(ping_count):
+        return self.__ping_count_map[ping_count]
+
+    def __getitem__(self, player):
+        return self.__player_map[player.name]
+
+    def __setitem__(self, player, ping_count):
+        self.__player_map[player.name] = ping_count
+        self.__ping_count_map[ping_count].append(player.name)
+        self.__save_player_count(player.name, ping_count)
+
+    def __contains__(self, player):
+        return player.name in self.__player_map
+
+    def __del__(self, player):
+        # Can KeyError, let it be handled by the caller.
+        ping_count = self.__player_map[player.name]
+
+        del self.__player_map[player.name]
+        self.__ping_count_map[ping_count].remove(player.name)
+        self.__delete_player_ping_count(player.name)
+
+    def __load_persistent_state(self):
+        with open(self.save_file, 'r') as f:
+            for line in f:
+                player_name, ping_count = f.split(' ', 1)
+
+                try:
+                    ping_count = int(ping_count)
+                except ValueError:
+                    raise ValueError("Corrupted pingifs file; could not parse ping count.")
+
+                self.__player_map[player_name] = ping_count
+                self.__ping_count_map[ping_count].append(player_name)
+
+    def __save_player_count(self, _player_name, _ping_count):
+        # just write dict to file rn, completely ignore args.
+        # when there is a db, this method will make more sense.
+
+        # Does this need a lock? Well, switching to SQLite will probably remove
+        # the need for one, so who cares.
+        with open(self.save_file, 'w+') as f:
+            for player_name, ping_count in self.__player_map.items():
+                f.write(f"{player_name} {ping_count}\n")
+
+    def __delete_player_ping_count(self, _player_name):
+        # don't actually do anything special yet.
+        # when there is a db, this method will make more sense.
+
+        self.__save_player_count(None, None)
