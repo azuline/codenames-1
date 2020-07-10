@@ -281,7 +281,7 @@ class IRCInterface(Interface):
 
     def ping_players(self):
         player_count = len(self.game.players)
-        player_to_ping = self.pingifs.get_players_with_ping_count(player_count)
+        player_to_ping = self.pingifs.get_player_names_with_ping_count(player_count)
 
         self.tell(f"PING! {player_count} players! {', '.join(players_to_ping)}")
 

@@ -1,8 +1,8 @@
 import logging
 
 import pytest
-from codenamesbot.state import (UNLIMITED, Game, GameMode, GamePhase, InvalidGameState, Player,
-                                Players, PlayingTeam, Team)
+from codenamesbot.state import (UNLIMITED, Game, GameMode, GamePhase, InvalidGameState, Pingifs,
+                                Player, Players, PlayingTeam, Team)
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -800,3 +800,46 @@ def test_start_ongoing_game():
 
     with pytest.raises(InvalidGameState):
         game.start_game()
+
+
+def test_pingifs_dict_interface():
+    pingifs = Pingifs(persistent=False)
+
+    alice = Player("alice")
+    bob = Player("bob")
+    claire = Player("claire")
+
+    pingifs[alice] = 1
+    pingifs[bob] = 2
+    pingifs[claire] = 2
+
+    assert pingifs[alice] == 1
+    assert pingifs[bob] == 2
+    assert pingifs[claire] == 2
+
+    donkey = Player("donkey")
+
+    assert alice in pingifs
+    assert donkey not in pingifs
+
+    del pingifs[alice]
+
+    assert alice not in pingifs
+
+def test_pingifs_get_players():
+    pingifs = Pingifs(persistent=False)
+
+    alice = Player("alice")
+    bob = Player("bob")
+    claire = Player("claire")
+
+    pingifs[alice] = 1
+    pingifs[bob] = 2
+    pingifs[claire] = 2
+
+    assert pingifs.get_player_names_with_ping_count(1) == ["alice"]
+    assert pingifs.get_player_names_with_ping_count(2) == ["bob", "claire"]
+
+    del pingifs[bob]
+
+    assert pingifs.get_player_names_with_ping_count(2) == ["claire"]
