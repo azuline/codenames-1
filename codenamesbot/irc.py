@@ -263,10 +263,10 @@ class IRCInterface(Interface):
 
     @command({"pingif"})
     def command_pingif(self, actor, args):
-        if len(args) != 2 or not args[1].isdigit():
+        try:
+            ping_count = int(args[1])
+        except:
             raise InvalidGameState("Invalid syntax. -pingif takes one argument, a number.")
-
-        ping_count = int(args[1])
 
         if ping_count < 0:
             raise InvalidGameState("Ping count must be a non-negative integer.")
